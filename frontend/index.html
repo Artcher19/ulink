@@ -1,4 +1,44 @@
-<form method="POST" action="/create-link">
-    <input type="text" name="original_url" placeholder="Введите оригинальную ссылку" required>
-    <button type="submit">Создать сокращенную ссылку</button>
-</form>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Сокращатель URL</title>
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+</head>
+<body>
+  <h1>Добро пожаловать</h1>
+  <form action="javascript:shorten()">
+    <label for="url">Введите ссылку:</label><br>
+    <input id="url" name="url" type="text"><br>
+    <input type="submit" value="Сократить">
+  </form>
+  <p id="shortened"></p>
+</body>
+
+<script>
+  // Базовый URL API - можно изменить в зависимости от окружения
+  // const API_BASE_URL = 'http://localhost:8000';
+
+  function shorten() {
+    const link = document.getElementById("url").value;
+    fetch(`/links`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        full_link: link
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      const url = data.short_link || data.url;
+      document.getElementById("shortened").innerHTML = `<a href="${url}" target="_blank">${url}</a>`;
+    })
+    .catch(error => {
+      document.getElementById("shortened").innerHTML = `<p>Произошла ошибка, попробуйте еще раз</p>`;
+    });
+  }
+</script>
+
+</html>

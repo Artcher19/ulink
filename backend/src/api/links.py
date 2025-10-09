@@ -15,7 +15,7 @@ async def create_short_link(data: LinkAddSchema, session: SessionDep):
     new_link_id = await get_next_link_id(session)
     control_digit = await calculate_control_digit(new_link_id)
     short_link = str(new_link_id) + str(control_digit)
-    full_short_link = f'http://{config.domain}/{short_link}'
+    full_short_link = f'{config.protocol}://{config.domain}/{short_link}'
     new_link = LinkModel(
         link_id = new_link_id,
         full_link = data.full_link,
@@ -26,7 +26,7 @@ async def create_short_link(data: LinkAddSchema, session: SessionDep):
     await session.commit()
     return {'short_link': full_short_link }
 
-@router.get('/{short_link}', tags = ['links'])
+@router.get('/{short_link}', summary = 'Переадресовать пользователя', tags = ['links'])
 async def redirect_user(short_link: str, session: SessionDep):
     query = select(LinkModel).where(LinkModel.short_link == short_link)
     result = await session.execute(query)

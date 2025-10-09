@@ -5,6 +5,7 @@ import os
 
 class Settings(BaseSettings):
     domain: str = Field(default='')
+    protocol: str = Field(default='')
 
     model_config = SettingsConfigDict(
         env_file='.env',
