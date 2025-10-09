@@ -18,7 +18,7 @@
 ``` bash
 docker run -d \
   --name=ulink-backend \
-  -e domain=ulinktest.duckdns.org\
+  -e domain=ваш домен\
   -e protocol=http\
   -p 8000:8000\
   --restart unless-stopped \
@@ -45,7 +45,7 @@ geo $restricted_access {
 
 server {
     listen 80;
-    server_name http://ulinktest.duckdns.org;
+    server_name ваш домен;
     
     #backend
     
