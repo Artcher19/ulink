@@ -1,6 +1,10 @@
 # Описание
 
-Сервис предназначен для сокращения ссылок. 
+Сервис предназначен для сокращения ссылок. Особенности:
+- Доступ к формированию ссылок по белому списку IPv4;
+- Присвоение контрольного разряда к сокращенной ссылке;
+
+## Стек
 
 | Компонент     | ПО            |
 | ------------- | ------------- |
@@ -9,43 +13,41 @@
 | Frontend      | HTML, CSS, JS |
 | Web-server    | Nginx         |
 
-
 # Развертывание
 
-Для автоматизированного развертывания сервиса потребуется установленная на ВМ утилита docker и сервис nginx.
+Для автоматизированного развертывания сервиса потребуется установленная на вашу виртуальную машину утилита docker и nginx.
 ## 1. Backend
 
 ``` bash
 docker run -d \
   --name=ulink-backend \
-  -e domain=ваш домен\
+  -e domain=ulinktest.duckdns.org\
   -e protocol=http\
   -p 8000:8000\
   --restart unless-stopped \
 darkbishop19/ulink-backend:latest
 ```
 
-`domain` - ваш публичный домен
+`domain` - ваш публичный домен.\n
 `protocol` - прикладной протокол модели OSI (http/https), который будет использовать ваш сервис
 
 ## 2. Frontend
 
-
+Необходимо установить [index.html](https://github.com/Artcher19/ulink/blob/main/frontend/index.html) в `/var/www/<название вашей папки>`. 
 ## 3. Nginx
 
-Настройка сайта
 ```
 geo $restricted_access {
     default 0;
     # Добавьте IP-адреса для белого списка
     10.0.0.1 1;
-    91.123.31.205 1;
+    46.8.233.148 1;
     # ... другие IP-адреса
 }
 
 server {
     listen 80;
-    server_name ваш домен;
+    server_name http://ulinktest.duckdns.org;
     
     #backend
     
@@ -102,7 +104,7 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
     }
 
-    #frontend
+    #frontend - только белый список
     location / {
         if ($restricted_access = 0) {
             return 403;
@@ -118,3 +120,13 @@ server {
 
 ### Белый список
 
+Управление белым списком через конфиг nginx в функции $restricted_access:
+```
+geo $restricted_access {
+    default 0;
+    # Добавьте IP-адреса для белого списка
+    10.0.0.1 1;
+    46.8.233.148 1;
+    # ... другие IP-адреса
+}
+```
