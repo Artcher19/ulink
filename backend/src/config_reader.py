@@ -4,8 +4,10 @@ import os
 
 
 class Settings(BaseSettings):
-    domain: str = Field(default='')
-    protocol: str = Field(default='')
+    domain: str = Field(default='localhost')
+    protocol: str = Field(default='http')
+    ydb_endpoint: str = Field(default = 'grpcs://ydb.example.com:2135')
+    ydb_database: str = Field(default= '/ru-central1/yihg94cbcei3ghew/gh4gcuv494v')
 
     model_config = SettingsConfigDict(
         env_file='.env',
