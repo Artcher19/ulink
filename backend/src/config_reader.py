@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     ydb_database: str = Field(default= '/ru-central1/yihg94cbcei3ghew/gh4gcuv494v')
 
     model_config = SettingsConfigDict(
-        env_file='.env',
+        env_file=os.path.join(os.path.dirname(__file__), '..', '.env'),
         env_file_encoding='utf-8',
         case_sensitive=False,
         extra='ignore'
