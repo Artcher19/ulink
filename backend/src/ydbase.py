@@ -27,23 +27,47 @@ driver = ydb.aio.Driver(driver_config)
 #             print(driver.discovery_debug_details())
 #             exit(1)
 
-async def get_session_pool():
-    async with ydb.aio.QuerySessionPool(driver) as pool:
-        yield pool
+driver_config = ydb.DriverConfig(
+    endpoint = config.ydb_endpoint, database = config.ydb_database, 
+    credentials=ydb.iam.ServiceAccountCredentials.from_file(key_file=key_path)
+)
 
-async def select_simple():
+async def main():
+    async with ydb.aio.Driver(driver_config) as driver:
+        try:
+            # Ждем инициализацию драйвера
+            await driver.wait(timeout=15, fail_fast=True)
+            print("Драйвер успешно подключен!")
+            
+            # Создаем пул сессий
+            async with ydb.aio.SessionPool(driver) as pool:
+                await select_simple(pool)
+                
+        except Exception as e:
+            print(f"Ошибка подключения: {e}")
+            # Получаем детальную информацию об ошибках
+            print("Детали ошибки discovery:")
+            print(driver.discovery_debug_details())
+
+async def select_simple(pool: ydb.aio.SessionPool):
     """Пример использования пула сессий"""
-    async for pool in get_session_pool():
-        print("\nCheck series table...")
-        result_sets = await pool.execute_with_retries(
-            """
-            SELECT *
-            FROM links
-            """,
-        )
-        print(result_sets[0])
+    print("\nВыполняем запрос к таблице links...")
     
-asyncio.run(select_simple())
+    # Используем правильный метод для выполнения запроса
+    result = await pool.retry_operation(
+        lambda session: session.transaction().execute(
+            "SELECT * FROM links",
+            commit_tx=True
+        )
+    )
+    
+    print("Результат запроса:")
+    for row in result[0].rows:
+        print(row)
+
+if __name__ == "__main__":
+    asyncio.run(main())
+    
 
 
 # # Чтение закрытого ключа из JSON-файла
