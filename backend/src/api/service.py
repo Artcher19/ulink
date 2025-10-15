@@ -1,41 +1,12 @@
+from datetime import datetime
+from fastapi import HTTPException
+from fastapi.responses import RedirectResponse
 from sqlalchemy import func, select
 from api.dependencies import SessionDep
+from api.utils import calculate_control_digit
+from schemas.links import LinkAddSchema
 from models.links import LinkModel
-
-
-async def calculate_control_digit(link_id: int):
-    """
-    Вычисляет контрольный разряд для сокращенной части ссылки.
-    
-    Args:
-        link_id (int): Сокращенная часть динамической ссылки (цифры)
-    
-    Returns:
-        int: Контрольный разряд (0-9)
-    """
-    # Преобразуем число в строку цифр
-    digits_str = str(link_id)
-    
-    # Нумерация справа налево (реверсируем)
-    reversed_digits = digits_str[::-1]
-    
-    # Подсчет сумм четных и нечетных позиций
-    even_sum = 0
-    odd_sum = 0
-    
-    for i, digit_char in enumerate(reversed_digits, start=1):
-        digit = int(digit_char)
-        if i % 2 == 0:  # четные позиции
-            even_sum += digit
-        else:  # нечетные позиции
-            odd_sum += digit
-    
-    # Общая сумма = сумма_четных + 3 * сумма_нечетных
-    total_sum = even_sum + 3 * odd_sum
-    
-    # Вычисление контрольного разряда
-    remainder = total_sum % 10
-    return 0 if remainder == 0 else 10 - remainder
+from config_reader import config
 
 async def get_next_link_id(session: SessionDep) -> int:
     """Получить следующий ID для ссылки, начиная с 10000"""
@@ -46,3 +17,28 @@ async def get_next_link_id(session: SessionDep) -> int:
         return 10000
     else:
         return max_id + 1
+
+async def create_short_link(data: LinkAddSchema, session: SessionDep):
+    new_link_id = await get_next_link_id(session)
+    control_digit = await calculate_control_digit(new_link_id)
+    short_link = str(new_link_id) + str(control_digit)
+    full_short_link = f'{config.protocol}://{config.domain}/{short_link}'
+    new_link = LinkModel(
+        link_id = new_link_id,
+        full_link = data.full_link,
+        short_link = short_link,
+        create_date = datetime.now()
+    )
+    session.add(new_link)
+    await session.commit()
+    return {'short_link': full_short_link }
+
+async def redirect_user(short_link: str, session: SessionDep):
+    query = select(LinkModel).where(LinkModel.short_link == short_link)
+    result = await session.execute(query)
+    link = result.scalar_one_or_none()
+    
+    if link is None:
+        raise HTTPException(status_code=404, detail="Ссылка не найдена")
+    
+    return RedirectResponse(url=link.full_link)
