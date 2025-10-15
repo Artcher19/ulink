@@ -20,3 +20,4 @@ async def setup_database():
 async def get_session():
     async with new_session() as session:
         yield session
+        

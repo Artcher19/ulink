@@ -26,28 +26,36 @@ driver = ydb.aio.Driver(driver_config)
 #             print("Last reported errors by discovery:")
 #             print(driver.discovery_debug_details())
 #             exit(1)
+class YDBDriver():
+    async def init():
+        pass
 
 driver_config = ydb.DriverConfig(
     endpoint = config.ydb_endpoint, database = config.ydb_database, 
     credentials=ydb.iam.ServiceAccountCredentials.from_file(key_file=key_path)
 )
+driver = ydb.aio.Driver(driver_config)
 
 async def main():
-    async with ydb.aio.Driver(driver_config) as driver:
-        try:
-            # Ждем инициализацию драйвера
-            await driver.wait(timeout=15, fail_fast=True)
-            print("Драйвер успешно подключен!")
+    async with ydb.aio.SessionPool(driver, size=10) as pool:
+        await select_simple(pool)
+
+# async def main():
+#     async with ydb.aio.Driver(driver_config) as driver:
+#         try:
+#             # Ждем инициализацию драйвера
+#             await driver.wait(timeout=15, fail_fast=True)
+#             print("Драйвер успешно подключен!")
             
-            # Создаем пул сессий
-            async with ydb.aio.SessionPool(driver) as pool:
-                await select_simple(pool)
+#             # Создаем пул сессий
+#             async with ydb.aio.SessionPool(driver, size=10) as pool:
+#                 await select_simple(pool)
                 
-        except Exception as e:
-            print(f"Ошибка подключения: {e}")
-            # Получаем детальную информацию об ошибках
-            print("Детали ошибки discovery:")
-            print(driver.discovery_debug_details())
+#         except Exception as e:
+#             print(f"Ошибка подключения: {e}")
+#             # Получаем детальную информацию об ошибках
+#             print("Детали ошибки discovery:")
+#             print(driver.discovery_debug_details())
 
 async def select_simple(pool: ydb.aio.SessionPool):
     """Пример использования пула сессий"""
@@ -60,14 +68,13 @@ async def select_simple(pool: ydb.aio.SessionPool):
             commit_tx=True
         )
     )
-    
+     
     print("Результат запроса:")
     for row in result[0].rows:
         print(row)
 
 if __name__ == "__main__":
-    asyncio.run(main())
-    
+    asyncio.run(main())  
 
 
 # # Чтение закрытого ключа из JSON-файла
