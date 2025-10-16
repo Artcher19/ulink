@@ -1,10 +1,21 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 import uvicorn
 from api import base_router
 from config_reader import config
 from fastapi.middleware.cors import CORSMiddleware
+from ydbase import ydb_connection
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Инициализация при запуске
+    # await setup_database()
+    await ydb_connection.initialize()
+    yield
+    # Очистка при завершении
+    await ydb_connection.close()
+    
+app = FastAPI(lifespan=lifespan)
 
 # app.add_middleware(
 #     CORSMiddleware,
