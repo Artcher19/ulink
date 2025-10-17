@@ -18,7 +18,7 @@ class YDBConnection:
             credentials=ydb.iam.ServiceAccountCredentials.from_file(key_file=key_path)
         )
         await self.driver.wait(timeout=5, fail_fast=True)
-        self.pool = ydb.aio.QuerySessionPool(self.driver)
+        self.pool = ydb.aio.QuerySessionPool(self.driver, size = config.ydb_pool_size)
     
     async def close(self):
         """Закрытие соединений"""
@@ -33,8 +33,12 @@ class YDBConnection:
         if not self.pool:
             await self.initialize()
         
-        async with self.pool.async_session() as session:
+        # Используем acquire() для получения сессии из пула
+        session = await self.pool.acquire()
+        try:
             yield session
+        finally:
+            await self.pool.release(session)
 
 # Создаем экземпляр для использования в приложении
 ydb_connection = YDBConnection()

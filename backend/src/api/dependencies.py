@@ -6,6 +6,6 @@ from ydbase import get_ydb_session
 from database import get_session
 
 SessionDep = Annotated[AsyncSession, Depends(get_session)]
-YdbSessionDep = Annotated[ydb.aio.Session, Depends(get_ydb_session)]
+YdbSessionDep = Annotated[object, Depends(get_ydb_session)]
 
 
