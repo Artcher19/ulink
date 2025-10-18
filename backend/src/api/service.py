@@ -1,11 +1,10 @@
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from fastapi import HTTPException
 from fastapi.responses import RedirectResponse
 from sqlalchemy import func, select
 from api.dependencies import SessionDep, YdbSessionDep
 from api.utils import calculate_control_digit
 from schemas.links import LinkAddSchema
-from models.links import LinkModel
 from config_reader import config
 
 async def get_next_link_id(session: YdbSessionDep) -> int:
@@ -16,12 +15,10 @@ async def get_next_link_id(session: YdbSessionDep) -> int:
     """
     
     # Правильный способ выполнения запроса в YDB
-    result_set = await session.execute(query)
-    print(f"result_set: {result_set}")
+    result_set = await session.execute(query) # type: ignore
 
     # Обрабатываем результат YDB
     async for result in result_set:
-        print(f"result_rows: {result.rows}")
         if result and result.rows:
             max_id = result.rows[0].max_id
             break
@@ -38,28 +35,35 @@ async def create_short_link(data: LinkAddSchema, session: YdbSessionDep):
     new_link_id = await get_next_link_id(session)
     control_digit = await calculate_control_digit(new_link_id)
     short_link = str(new_link_id) + str(control_digit)
-    full_short_link = f'{config.protocol}://{config.domain}/{short_link}'
-    # YQL запрос для вставки данных
+    full_short_link = f'{config.public_domain}/{short_link}'
+    
+    # Получаем текущее время в московском часовом поясе
+    from datetime import datetime, timezone, timedelta
+    
+    # Московский часовой пояс (UTC+3)
+    moscow_offset = timedelta(hours=3)
+    moscow_time = datetime.now(timezone.utc) + moscow_offset
+    
+    # YQL запрос для вставки данных с преобразованием в Timestamp
     query = """
-        DECLARE $link_id AS Int
-        DECLARE $full_link AS String 
-        DECLARE $short_link AS String
-        DECLARE $create_date AS Datetime
-
-        UPSERT INTO links (link_id, full_link, short_link, create_date);
+        UPSERT INTO links (link_id, full_link, short_link, create_date)
+        VALUES ($link_id, $full_link, $short_link, CurrentUtcTimestamp())
         """
     
-    # Параметры для запроса
+    # Параметры для запроса - передаем время в формате для Timestamp
     params = {
         '$link_id': new_link_id,
         '$full_link': data.full_link,
-        '$short_link': short_link,
-        '$create_date': datetime.now().isoformat()
+        '$short_link': short_link
     }
-    print(params)
+    
+    # Проверяем, что сессия доступна
+    if session is None:
+        raise HTTPException(status_code=500, detail="Ошибка подключения к БД")
+    
     
     # Выполняем запрос через YDB сессию
-    result = await session.execute(
+    await session.execute( # type: ignore
         query,
         params
     )
@@ -74,7 +78,7 @@ async def redirect_user(short_link: str, session: YdbSessionDep):
     params = {'$short_link': short_link}
 
     # Правильный способ передачи параметров в YDB
-    result_set = await session.execute(
+    result_set = await session.execute(  # type: ignore
         query,
         params
     )
