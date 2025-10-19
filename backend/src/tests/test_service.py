@@ -1,3 +1,4 @@
+import asyncio
 from httpx import ASGITransport, AsyncClient
 import pytest
 import aiohttp
@@ -123,3 +124,104 @@ async def test_redirect_user_valid_cases():
             response = await ac.get(f"/{case}")
             # Для существующих ссылок ожидаем 300, для несуществующих - 404
             assert response.status_code in [300, 404], f"Valid case {case} caused unexpected status: {response.status_code}"
+
+@pytest.mark.asyncio(loop_scope="session")
+async def test_paraller_post_requests():    
+    # Количество параллельных запросов
+    num_requests = 1000
+    
+    async def create_link(client, index):
+        """Вспомогательная функция для создания ссылки с уникальным URL"""
+        data = {"full_link": f"https://example.com/page{index}"}
+        response = await client.post("/links", json=data)
+        return response
+    
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as ac:
+        # Создаем несколько параллельных запросов
+        tasks = [create_link(ac, i) for i in range(num_requests)]
+        responses = await asyncio.gather(*tasks)
+        
+        # Проверяем, что все запросы завершились успешно
+        successful_responses = 0
+        short_links = []
+        
+        for i, response in enumerate(responses):
+            if response.status_code == 200:
+                successful_responses += 1
+                data = response.json()
+                short_link = data["short_link"]
+                # Извлекаем только числовую часть (без домена)
+                numeric_part = short_link.split("/")[-1]
+                short_links.append(numeric_part)
+                print(f"Request {i}: Success - {short_link}")
+            else:
+                print(f"Request {i}: Failed with status {response.status_code}")
+        
+        # Проверяем основные утверждения
+        assert successful_responses == num_requests, f"Expected {num_requests} successful requests, got {successful_responses}"
+        
+        # Проверяем, что все ссылки уникальны
+        assert len(short_links) == len(set(short_links)), f"Duplicate short links found: {short_links}"
+        
+        # Проверяем, что все ссылки имеют правильный формат
+        for link in short_links:
+            assert link.isdigit(), f"Short link {link} is not numeric"
+            # Проверяем контрольную цифру
+            base_number = int(link[:-1])  # Все кроме последней цифры
+            control_digit = int(link[-1])  # Последняя цифра
+            expected_control = await calculate_control_digit(base_number)
+            assert control_digit == expected_control, f"Control digit mismatch for {link}"
+        
+        print(f"✓ Successfully created {num_requests} unique short links in parallel")
+
+@pytest.mark.asyncio(loop_scope="session")
+async def test_parallel_redirect_requests():
+    # Ссылки для тестирования редиректа
+    test_links = ["100014",
+                   "100021", 
+                   "100038", 
+                   "100045", 
+                   "100052",
+                   "100076",
+                   "100090"]
+    
+    async def perform_redirect(client, link):
+        """Вспомогательная функция для выполнения редиректа"""
+        response = await client.get(link)
+        return response
+    
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as ac:
+        # Создаем несколько параллельных запросов редиректа
+        tasks = [perform_redirect(ac, link) for link in test_links]
+        responses = await asyncio.gather(*tasks)
+        
+        # Проверяем, что все запросы завершились успешно
+        successful_redirects = 0
+        redirect_statuses = []
+        
+        for i, response in enumerate(responses):
+            # Для существующих ссылок ожидаем статус 307 (Temporary Redirect) или 308 (Permanent Redirect)
+            if response.status_code in [307, 308]:
+                successful_redirects += 1
+                redirect_url = response.headers.get("location", "No location header")
+                redirect_statuses.append({
+                    "link": test_links[i],
+                    "status": response.status_code,
+                    "location": redirect_url
+                })
+                print(f"Redirect {i}: Success - {test_links[i]} -> {redirect_url} (Status: {response.status_code})")
+            else:
+                print(f"Redirect {i}: Failed for {test_links[i]} with status {response.status_code}")
+        
+        # Проверяем основные утверждения
+        assert successful_redirects == len(test_links), f"Expected {len(test_links)} successful redirects, got {successful_redirects}"
+        
+        # Проверяем, что все редиректы ведут на валидные URL
+        for status_info in redirect_statuses:
+            assert status_info["location"].startswith(("http://", "https://")), f"Invalid redirect location: {status_info['location']}"
+        
+        print(f"✓ Successfully processed {len(test_links)} parallel redirect requests")

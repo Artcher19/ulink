@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     public_domain: str = Field(default='localhost:8080', description="Публичный домен сокращенной ссылки для отображения пользователю")
     ydb_endpoint: str = Field(default = 'grpcs://ydb.example.com:2135')
     ydb_database: str = Field(default= '/ru-central1/<ваше значение из YDB>/<ваше значение из YDB>')
-    ydb_pool_size: int = Field(default = 50)
+    ydb_pool_size: int = Field(default = 1000)
     authorized_key_base64: str = Field(default = '', description='Base64 значение json конфига сервисного аккаунта для управления YDB')
     uvicorn_port: str = Field(default='8080')
 

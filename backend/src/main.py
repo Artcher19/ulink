@@ -8,11 +8,8 @@ from ydbase import ydb_connection
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Инициализация при запуске
-    # await setup_database()
     await ydb_connection.initialize()
     yield
-    # Очистка при завершении
     await ydb_connection.close()
     
 app = FastAPI(lifespan=lifespan)

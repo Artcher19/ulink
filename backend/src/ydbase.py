@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import json
 import os
@@ -38,8 +39,8 @@ class YDBConnection:
             await self.initialize()
         
         # Используем acquire() для получения сессии из пула
-        session = await self.pool.acquire() # type: ignore
         try:
+            session = await self.pool.acquire() # type: ignore
             yield session
         finally:
             await self.pool.release(session) # type: ignore
@@ -51,3 +52,20 @@ async def get_ydb_session():
     """Зависимость для FastAPI"""
     async with ydb_connection.get_session() as session:
         yield session
+
+async def create_link_table():
+    query = """
+    CREATE TABLE links (
+    link_id Serial8 NOT NULL,
+    full_link Utf8 NOT NULL,
+    short_link Utf8,
+    create_date Timestamp,
+    PRIMARY KEY (link_id)
+    );
+    """
+    await ydb_connection.initialize()
+    async with ydb_connection.pool as pool: # type: ignore
+        await pool.execute_with_retries(query)
+    await ydb_connection.close()
+
+# asyncio.run(create_link_table())
