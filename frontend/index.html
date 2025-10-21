@@ -198,8 +198,7 @@
 </body>
 
 <script>
-  // Базовый URL API - можно изменить в зависимости от окружения
-  // const API_BASE_URL = 'http://localhost:8000';
+
 
   function shorten() {
     const link = document.getElementById("url").value;
@@ -222,9 +221,14 @@
     })
     .then(response => response.json())
     .then(data => {
-      const url = data.short_link || data.url;
-      shortenedLink.innerHTML = url;
-      shortenedLink.href = url;
+      const url = data.short_link;
+      // Убедимся, что ссылка имеет правильный формат с протоколом
+      let fullUrl = url;
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        fullUrl = 'https://' + url;
+      }
+      shortenedLink.innerHTML = fullUrl;
+      shortenedLink.href = fullUrl;
       resultContainer.className = "result-container show";
     })
     .catch(error => {

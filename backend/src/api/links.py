@@ -1,7 +1,5 @@
 from fastapi import APIRouter
-from fastapi.responses import RedirectResponse
 from schemas.links import LinkAddSchema
-from database import setup_database
 from api.service import create_short_link, redirect_user
 from config_reader import config
 

@@ -1,7 +1,5 @@
 import asyncio
 import base64
-import json
-import os
 import ydb
 from config_reader import config
 from contextlib import asynccontextmanager

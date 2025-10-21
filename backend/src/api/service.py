@@ -1,6 +1,5 @@
 from fastapi import HTTPException
 from fastapi.responses import RedirectResponse
-from sqlalchemy import func, select
 from api.utils import calculate_control_digit
 from schemas.links import LinkAddSchema
 from config_reader import config
