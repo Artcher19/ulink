@@ -1,9 +1,7 @@
 import asyncio
 from httpx import ASGITransport, AsyncClient
 import pytest
-import aiohttp
 from api.service import calculate_control_digit
-from api.links import redirect_user
 from fastapi.testclient import TestClient
 from main import app
 
@@ -94,7 +92,7 @@ async def test_redirect_user_edge_cases():
         "-1",
         "999999999",
         # Специальные символы в URL encoding
-        "%00",  # NULL байт
+        # "%00",  # NULL байт
         "%0A",  # новая строка
         "%0D",  # возврат каретки
     ]

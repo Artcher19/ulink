@@ -14,7 +14,7 @@ async def create_short_link(data: LinkAddSchema, session: SessionDep):
     new_link_id = 10000 + link_id
     control_digit = await calculate_control_digit(new_link_id)
     short_link = str(new_link_id) + str(control_digit)   
-    await crud.update_link(link_id, short_link, data.full_link, session)
+    await crud.update_link(link_id, short_link, session)
     full_short_link = f'{config.public_domain}/{short_link}'
     return {"short_link": full_short_link}
 

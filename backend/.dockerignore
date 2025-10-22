@@ -221,3 +221,6 @@ __marimo__/
 
 #configs
 authorized_key.json
+
+#certs
+certs/

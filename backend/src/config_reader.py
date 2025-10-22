@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     pg_password: str = Field(default = 'password')
     pg_host: str = Field(default = 'localhost:5432')
     pg_database_name: str = Field(default = 'database')
+    ca_path: str = Field(default = "links/backend/certs/RootCA.pem")
 
 
     model_config = SettingsConfigDict(
