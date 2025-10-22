@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field
+from typing import Literal
 import os
 
 
@@ -15,6 +16,7 @@ class Settings(BaseSettings):
     pg_host: str = Field(default = 'localhost:5432')
     pg_database_name: str = Field(default = 'database')
     ca_path: str = Field(default = "links/backend/certs/RootCA.pem")
+    deploy_zone: Literal['dev', 'prod'] = Field(default='dev')
 
 
     model_config = SettingsConfigDict(
