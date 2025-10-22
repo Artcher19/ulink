@@ -10,6 +10,11 @@ class Settings(BaseSettings):
     ydb_pool_size: int = Field(default = 1000)
     authorized_key_base64: str = Field(default = '', description='Base64 значение json конфига сервисного аккаунта для управления YDB')
     uvicorn_port: str = Field(default='8080')
+    pg_username: str = Field(default='user')
+    pg_password: str = Field(default = 'password')
+    pg_host: str = Field(default = 'localhost:5432')
+    pg_database_name: str = Field(default = 'database')
+
 
     model_config = SettingsConfigDict(
         env_file=os.path.join(os.path.dirname(__file__), '..', '.env'),

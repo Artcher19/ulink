@@ -2,15 +2,15 @@ from fastapi import APIRouter
 from schemas.links import LinkAddSchema
 from api.service import create_short_link, redirect_user
 from config_reader import config
-
+from api.dependencies import SessionDep
 router = APIRouter(tags=['links'])
 
 @router.post('/links', summary='Создать сокращенную ссылку', description='Возвращает сокращенную ссылку')
-async def post_link(data: LinkAddSchema):
+async def post_link(data: LinkAddSchema, session: SessionDep):
     return await create_short_link(data)
 
 @router.get('/{short_link}', summary = 'Переадресовать пользователя')
-async def get_full_link(short_link: str):
+async def get_full_link(short_link: str, session: SessionDep):
     return await redirect_user(short_link)
 
 
