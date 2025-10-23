@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from config_reader import config
 from models.links import Base
 
+engine = create_async_engine(f"sqlite+aiosqlite:///{config.sqlite_database}")
 
 if config.deploy_zone == 'dev':
     # Создаем SSL контекст с CA-сертификатом

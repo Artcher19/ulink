@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     pg_database_name: str = Field(default = 'database')
     ca_path: str = Field(default = "links/backend/certs/RootCA.pem")
     deploy_zone: Literal['dev', 'prod'] = Field(default='dev')
+    sqlite_database: str = Field(default = "database.db")
 
 
     model_config = SettingsConfigDict(
