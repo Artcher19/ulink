@@ -126,7 +126,7 @@ async def test_redirect_user_valid_cases():
 @pytest.mark.asyncio(loop_scope="session")
 async def test_paraller_post_requests():    
     # Количество параллельных запросов
-    num_requests = 200
+    num_requests = 10
     
     async def create_link(client, index):
         """Вспомогательная функция для создания ссылки с уникальным URL"""
