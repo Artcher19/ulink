@@ -4,7 +4,6 @@ from api.utils import calculate_control_digit
 from schemas.links import LinkAddSchema
 from config_reader import config
 from api import crud
-from ydbase import ydb_connection
 from api.dependencies import SessionDep
 
 
@@ -14,11 +13,11 @@ async def create_short_link(data: LinkAddSchema, session: SessionDep):
     new_link_id = 10000 + link_id
     control_digit = await calculate_control_digit(new_link_id)
     short_link = str(new_link_id) + str(control_digit)   
-    await crud.update_link(link_id, short_link, session)
+    await crud.update_link(link_id, int(short_link), session)
     full_short_link = f'{config.public_domain}/{short_link}'
     return {"short_link": full_short_link}
 
-async def redirect_user(short_link: str, session: SessionDep): # type: ignore
+async def redirect_user(short_link: int, session: SessionDep): # type: ignore
     """Осуществить редирект пользователя"""
     full_link = await crud.get_full_link_by_short_link(short_link, session)
     if full_link is None:

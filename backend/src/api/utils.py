@@ -1,3 +1,5 @@
+import os
+
 async def calculate_control_digit(link_id: int) -> int:
     """
     Вычисляет контрольный разряд для сокращенной части ссылки.
@@ -31,3 +33,22 @@ async def calculate_control_digit(link_id: int) -> int:
     # Вычисление контрольного разряда
     remainder = total_sum % 10
     return 0 if remainder == 0 else 10 - remainder
+
+async def delete_current_db_files(database_path: str):
+    db_path = database_path
+    db_dir = os.path.dirname(db_path)
+    db_name = os.path.basename(db_path)
+    db_name_without_ext = os.path.splitext(db_name)[0]
+
+    files_to_remove = [
+        db_path,
+        os.path.join(db_dir, db_name_without_ext + "-wal"),
+        os.path.join(db_dir, db_name_without_ext + "-shm"),
+        os.path.join(db_dir, db_name_without_ext + "-journal")
+        ]
+        
+    for file_path in files_to_remove:
+        if os.path.exists(file_path):
+            os.remove(file_path)
+    
+    

@@ -4,21 +4,14 @@ from api import base_router
 from config_reader import config
 from fastapi.middleware.cors import CORSMiddleware
 
-# @asynccontextmanager
-# async def lifespan(app: FastAPI):
-#     await ydb_connection.initialize()
-#     yield
-#     await ydb_connection.close()
 
-app = FastAPI()
+app = FastAPI(
+    title='ShortLinkApp',
+    description='Сервис для сокращения ссылок',
+    version = 'v1.2.0',
+    redoc_url=None,
+)
 
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=[f"{config.protocol}://{config.domain}:8080"],
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
 
 app.include_router(base_router)
 

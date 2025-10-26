@@ -1,10 +1,8 @@
 import asyncio
 from httpx import ASGITransport, AsyncClient
 import pytest
-from api.service import calculate_control_digit
-from fastapi.testclient import TestClient
+from api.utils import calculate_control_digit
 from main import app
-
 
 
 @pytest.mark.asyncio()
@@ -61,7 +59,7 @@ async def test_root():
         for injection in injection_tests:
             response = await ac.get(f"/{injection}")
             # Ожидаем либо 404 (не найдено), либо 300 (редирект), но не 500 (ошибка сервера)
-            assert response.status_code in [300, 404], f"Injection {injection} caused unexpected status: {response.status_code}"
+            assert response.status_code in [300, 404, 422], f"Injection {injection} caused unexpected status: {response.status_code}"
     
 
 @pytest.mark.asyncio(loop_scope="session")
@@ -126,7 +124,7 @@ async def test_redirect_user_valid_cases():
 @pytest.mark.asyncio(loop_scope="session")
 async def test_paraller_post_requests():    
     # Количество параллельных запросов
-    num_requests = 10
+    num_requests = 100
     
     async def create_link(client, index):
         """Вспомогательная функция для создания ссылки с уникальным URL"""

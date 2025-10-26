@@ -5,6 +5,6 @@ class LinkAddSchema(BaseModel):
 
 class LinkSchema(LinkAddSchema):
     link_id: int
-    short_link: str
+    short_link: int
     create_date: str
 
