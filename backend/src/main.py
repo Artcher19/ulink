@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 import uvicorn
 from api import base_router
 from logging_middleware import LoggingMiddleware

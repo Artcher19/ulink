@@ -20,7 +20,7 @@ async def post_database(auth: str = Depends(basic_auth)):
             raise HTTPException(status_code=500, detail=f"Ошибка при создании базы данных: {str(e)}")
         
 @router.post('/admin/backup_database', summary='Создать backup базы данных', description='Отправляет файл базы данных в S3 по текущей дате')
-async def post_database_backup(request: Request, auth: str = Depends(basic_auth)):
+async def post_database_backup(auth: str = Depends(basic_auth)):
     try:
         file_path = config.sqlite_database_path
         file_name, file_format = file_path.split("/")[-1].split(".")
