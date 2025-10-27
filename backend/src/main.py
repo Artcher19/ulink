@@ -1,8 +1,10 @@
 from fastapi import FastAPI
 import uvicorn
 from api import base_router
+from logging_middleware import LoggingMiddleware
 from config_reader import config
-from fastapi.middleware.cors import CORSMiddleware
+
+
 
 
 app = FastAPI(
@@ -12,6 +14,7 @@ app = FastAPI(
     redoc_url=None,
 )
 
+app.add_middleware(LoggingMiddleware)
 
 app.include_router(base_router)
 
