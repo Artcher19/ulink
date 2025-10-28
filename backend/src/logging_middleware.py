@@ -1,8 +1,9 @@
+from datetime import datetime
 import time
 import json
-import sys
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
+
 
 class LoggingMiddleware(BaseHTTPMiddleware):
     """Middleware для логирования HTTP запросов в JSON формате"""
@@ -52,6 +53,6 @@ class LoggingMiddleware(BaseHTTPMiddleware):
             log_data["request_body"] = body
         
         # Выводим JSON напрямую в stdout для Fluent Bit
-        print(json.dumps(log_data, ensure_ascii=False), file=sys.stdout, flush=True)
+        print(json.dumps(log_data, ensure_ascii=False), flush=True)
         
         return response
