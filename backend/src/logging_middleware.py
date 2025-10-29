@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 import time
 import json
 from fastapi import Request
@@ -32,11 +32,14 @@ class LoggingMiddleware(BaseHTTPMiddleware):
             log_level = "WARN"
         else:
             log_level = "ERROR"
-        
+
+        moscow_tz = timezone(timedelta(hours=3))
+        moscow_time = datetime.now(moscow_tz)
+
         # Формируем структурированный лог
         process_time = time.time() - start_time
         log_data = {
-            "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "timestamp": moscow_time.strftime("%Y-%m-%dT%H:%M:%S%z"),
             "level": log_level,  # Динамический уровень на основе статус кода
             "type": "http_request",
             "method": request.method,
