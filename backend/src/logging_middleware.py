@@ -29,7 +29,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
         if 200 <= status_code < 400:
             log_level = "INFO"
         elif 400 <= status_code < 500:
-            log_level = "WARNING"
+            log_level = "WARN"
         else:
             log_level = "ERROR"
         
